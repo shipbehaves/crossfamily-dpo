@@ -16,7 +16,7 @@ pipeline_tag: text-generation
 
 LoRA DPO adapter for Qwen3-4B-Instruct-2507, trained on UltraFeedback. one leg of
 [`crossfamily-dpo`](https://github.com/shipbehaves/crossfamily-dpo): the same recipe run across
-two model families (Qwen + Mistral), writeup first.
+two model families (Qwen + Mistral).
 
 ## result
 
@@ -30,7 +30,7 @@ so length cancels). n = 500 UltraFeedback pairs, disjoint from training.
 | length-normalized accuracy | 0.592 |
 | mean implicit-reward margin | +6.30 |
 
-## the failure analysis (the point)
+## the failure analysis
 
 the first eval read 0.498 and looked like a null. it was a measurement bug, not a training bug. it
 scored absolute log-probability, but DPO optimizes the reference-relative implicit reward

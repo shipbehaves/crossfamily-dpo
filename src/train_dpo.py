@@ -12,7 +12,7 @@
 # ]
 # ///
 """
-train_dpo.py - the first REAL run (P1). Built to run on HF Jobs GPU via:
+train_dpo.py - the real DPO run. Built to run on HF Jobs GPU via:
 
     hf jobs uv run src/train_dpo.py --flavor a100-large --secrets HF_TOKEN
 

@@ -1,5 +1,5 @@
 """
-smoke.py - the walking skeleton for P1.
+smoke.py - the walking skeleton.
 
 Goal: prove the ENTIRE DPO loop runs end to end (load model -> load preference pairs ->
 a few DPO steps -> save), on a tiny model, for free, on the laptop. This is NOT a real

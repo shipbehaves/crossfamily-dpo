@@ -17,7 +17,7 @@ pipeline_tag: text-generation
 
 LoRA DPO adapter for Ministral-8B-Instruct-2410, trained on UltraFeedback. one leg of
 [`crossfamily-dpo`](https://github.com/shipbehaves/crossfamily-dpo): the same recipe run across
-two model families (Qwen + Mistral), writeup first.
+two model families (Qwen + Mistral).
 
 inherits the Mistral Research License (research / non-commercial) from the base model.
 
@@ -35,7 +35,7 @@ so length cancels). n = 500 UltraFeedback pairs, disjoint from training.
 
 same recipe on Qwen3-4B-Instruct lands 0.666, so the effect holds across families.
 
-## the failure analysis (the point)
+## the failure analysis
 
 the first run of this pipeline (on the Qwen leg) read 0.498 and looked like a null. it was a
 measurement bug, not a training bug: it scored absolute log-probability, but DPO optimizes the

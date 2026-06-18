@@ -1,4 +1,4 @@
-# crossfamily-dpo (P1)
+# crossfamily-dpo
 
 Eval-driven **DPO** on small open models, **across families** (Qwen + Mistral). The first real
 post-training result. Public data, reproducible, and the writeup **leads with failure analysis**.
@@ -15,8 +15,8 @@ families? Where does each improve, where does each regress (especially honesty v
 5. **publish**: HF model + dataset + this writeup (failure-analysis first).
 
 ## Reproducibility
-`uv` + `uv.lock` pin every dependency. Seeds fixed. Artifacts pushed to the Hub. `make`-style steps
-documented so a stranger can re-run them.
+`uv` + `uv.lock` pin every dependency. Seeds fixed. Artifacts pushed to the Hub. Each step is a
+single documented command (see the reproduce lines under each result).
 
 ## Result (2026-06-18)
 
@@ -29,7 +29,7 @@ from chance to ~0.67 on both:
 | [Qwen3-4B-Instruct](https://huggingface.co/yavuz-ai/qwen3-4b-dpo-ultrafeedback-lora) | **0.666** | 0.498 | 0.592 | +6.30 |
 | [Ministral-8B-Instruct](https://huggingface.co/yavuz-ai/ministral-8b-dpo-ultrafeedback-lora) | **0.672** | 0.514 | 0.640 | +6.53 |
 
-### The failure that makes the result (lead with this)
+### The failure behind the result
 
 Run #1 first looked like a **total null** (0.498, no movement). It wasn't. The eval measured the
 policy's *absolute* sum-of-token-logprob, but DPO optimizes the *reference-relative* implicit
