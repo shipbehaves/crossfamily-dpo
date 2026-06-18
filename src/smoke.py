@@ -1,5 +1,5 @@
 """
-smoke.py — the walking skeleton for P1.
+smoke.py - the walking skeleton for P1.
 
 Goal: prove the ENTIRE DPO loop runs end to end (load model -> load preference pairs ->
 a few DPO steps -> save), on a tiny model, for free, on the laptop. This is NOT a real
@@ -43,7 +43,7 @@ def main():
     trainer = DPOTrainer(model=model, args=args, train_dataset=ds, processing_class=tok)
     trainer.train()
     trainer.save_model("out/smoke")
-    print("\nSMOKE OK — the DPO loop ran end to end and saved to out/smoke")
+    print("\nSMOKE OK - the DPO loop ran end to end and saved to out/smoke")
 
 if __name__ == "__main__":
     main()

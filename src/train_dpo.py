@@ -12,24 +12,24 @@
 # ]
 # ///
 """
-train_dpo.py — the first REAL run (P1). Built to run on HF Jobs GPU via:
+train_dpo.py - the first REAL run (P1). Built to run on HF Jobs GPU via:
 
     hf jobs uv run src/train_dpo.py --flavor a100-large --secrets HF_TOKEN
 
 It does three things and then publishes:
-  1. eval BEFORE: on a held-out slice, how often does the BASE model already prefer the
-     chosen answer over the rejected one? (preference accuracy = the DPO-native metric)
-  2. train: LoRA DPO on a UltraFeedback subset, with the recipe corrected by finding #1
-     (sane LR + warmup + cosine + gradient accumulation to cut batch-size-1 noise).
-  3. eval AFTER: same held-out slice, now with the trained adapter. The delta is the result.
-  4. push the adapter + a results.json + a short card to the Hub.
+  1. train: LoRA DPO on a UltraFeedback subset (recipe corrected by finding #1: sane LR +
+     warmup + cosine + gradient accumulation).
+  2. eval: DPO implicit-reward accuracy on a held-out slice (finding #2: the correct,
+     reference-relative, length-canceling metric; policy = adapter on, reference = adapter off).
+     Also reports the old absolute metric (broken baseline) + a length-normalized column.
+  3. push the adapter + results.json to the Hub.
 
 Everything is env-overridable so the SAME script runs the Mistral leg (cross-family) by
 changing BASE_MODEL + OUTPUT_REPO. Nothing here assumes a specific family.
 
 Why LoRA: a 4B full fine-tune needs an optimizer state far larger than the weights. LoRA
 trains a small adapter instead, so it fits one GPU cheaply. With PEFT, TRL uses the
-adapter-disabled model as the frozen reference (ref_model=None) — no second copy in memory.
+adapter-disabled model as the frozen reference (ref_model=None) - no second copy in memory.
 """
 import json
 import os

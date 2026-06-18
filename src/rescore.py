@@ -10,7 +10,7 @@
 # ]
 # ///
 """
-rescore.py — re-evaluate run #1's EXISTING checkpoint with the CORRECT metric. No retraining.
+rescore.py - re-evaluate run #1's EXISTING checkpoint with the CORRECT metric. No retraining.
 
 Run #1 reported preference accuracy with the wrong ruler: absolute sum-of-token-logprob,
 no reference model. DPO optimizes the REFERENCE-RELATIVE implicit reward, so the right
@@ -77,7 +77,7 @@ def main():
         # policy (adapter on)
         pc, lc = logprob(model, tok, pm, c)
         pr, lr = logprob(model, tok, pm, r)
-        # reference (adapter off) — the exact training reference
+        # reference (adapter off) - the exact training reference
         with model.disable_adapter():
             rc, _ = logprob(model, tok, pm, c)
             rr, _ = logprob(model, tok, pm, r)
@@ -90,7 +90,7 @@ def main():
 
     n = len(eval_rows)
     mean_margin = sum(margins) / n
-    print(f"\nheld-out pairs: {n}  (adapter changed logprob on {adapter_moved}/{n} — sanity)")
+    print(f"\nheld-out pairs: {n}  (adapter changed logprob on {adapter_moved}/{n} - sanity)")
     print(f"1) OLD absolute sum-logprob acc : {old_correct/n:.3f}   (run #1 reported ~0.498)")
     print(f"2) NEW implicit-reward acc      : {new_correct/n:.3f}   <-- correct headline")
     print(f"3) length-normalized acc        : {norm_correct/n:.3f}   (robustness)")
