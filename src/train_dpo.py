@@ -33,10 +33,9 @@ adapter-disabled model as the frozen reference (ref_model=None) — no second co
 """
 import json
 import os
-from itertools import islice
 
 import torch
-from datasets import Dataset, load_dataset
+from datasets import load_dataset
 from huggingface_hub import HfApi
 from peft import LoraConfig
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -66,31 +65,49 @@ def split_pair(row):
 
 
 @torch.no_grad()
-def seq_logprob(model, tok, prompt_msgs, response_text):
-    """Total log-probability the model assigns to `response_text` after `prompt_msgs`."""
+def logprob(model, tok, prompt_msgs, response_text):
+    """(sum log-prob, n response tokens) the model assigns to `response_text` after `prompt_msgs`."""
     enc = tok.apply_chat_template(prompt_msgs, add_generation_prompt=True, return_tensors="pt", return_dict=True)
     prompt_ids = enc["input_ids"]   # transformers 5.x returns a BatchEncoding, not a bare tensor
     resp_ids = tok(response_text, add_special_tokens=False, return_tensors="pt").input_ids
     input_ids = torch.cat([prompt_ids, resp_ids], dim=1)[:, :MAX_LEN].to(model.device)
     logits = model(input_ids).logits
-    logprobs = torch.log_softmax(logits[:, :-1].float(), dim=-1)
-    targets = input_ids[:, 1:]
-    token_lp = logprobs.gather(-1, targets.unsqueeze(-1)).squeeze(-1)
-    n_prompt = prompt_ids.shape[1]
-    return token_lp[:, n_prompt - 1:].sum().item()   # sum over response tokens only
+    lp = torch.log_softmax(logits[:, :-1].float(), dim=-1)
+    tok_lp = lp.gather(-1, input_ids[:, 1:].unsqueeze(-1)).squeeze(-1)
+    resp_lp = tok_lp[:, prompt_ids.shape[1] - 1:]
+    return resp_lp.sum().item(), resp_lp.shape[1]
 
 
-def pref_accuracy(model, tok, eval_rows):
-    """Fraction of held-out pairs where the model scores chosen above rejected, + mean margin."""
+def eval_metrics(model, tok, eval_rows):
+    """DPO implicit-reward accuracy (reference-relative, length-canceling) is the headline.
+    `model` is the trained PEFT policy; the reference is the SAME model with the adapter
+    DISABLED (the exact frozen reference TRL trained against), so length cancels. We also
+    report the OLD absolute-logprob metric (the broken baseline) and a length-normalized
+    robustness column. This is the corrected metric that turned run #1's 0.498 into 0.666."""
     model.eval()
-    wins, margins = 0, []
+    new_c = old_c = norm_c = moved = 0
+    margins = []
     for row in eval_rows:
-        prompt_msgs, chosen, rejected = split_pair(row)
-        lp_c = seq_logprob(model, tok, prompt_msgs, chosen)
-        lp_r = seq_logprob(model, tok, prompt_msgs, rejected)
-        wins += int(lp_c > lp_r)
-        margins.append(lp_c - lp_r)
-    return wins / len(eval_rows), sum(margins) / len(margins)
+        pm, chosen, rejected = split_pair(row)
+        pc, lc = logprob(model, tok, pm, chosen)
+        pr, lr = logprob(model, tok, pm, rejected)
+        with model.disable_adapter():               # adapter OFF = frozen reference
+            rc, _ = logprob(model, tok, pm, chosen)
+            rr, _ = logprob(model, tok, pm, rejected)
+        s_c, s_r = pc - rc, pr - rr                  # implicit rewards (length cancels)
+        new_c += int(s_c > s_r)
+        old_c += int(pc > pr)
+        norm_c += int((pc / max(lc, 1)) > (pr / max(lr, 1)))
+        margins.append(s_c - s_r)
+        moved += int(abs(pc - rc) > 1e-3)
+    n = len(eval_rows)
+    return {
+        "implicit_reward_acc": round(new_c / n, 4),    # <-- headline (correct metric)
+        "old_abs_acc": round(old_c / n, 4),            # broken baseline (~0.50)
+        "len_norm_acc": round(norm_c / n, 4),          # length robustness
+        "mean_implicit_margin": round(sum(margins) / n, 4),
+        "adapter_moved": f"{moved}/{n}",               # sanity check
+    }
 
 
 def main():
@@ -100,18 +117,12 @@ def main():
         tok.pad_token = tok.eos_token
     model = AutoModelForCausalLM.from_pretrained(BASE_MODEL, dtype=torch.bfloat16).to(DEVICE)
 
-    # stream the slice we need; hold out the LAST N_EVAL pairs so train/eval never overlap
-    stream = load_dataset(DATASET, split="train", streaming=True)
-    rows = list(islice(stream, N_TRAIN + N_EVAL))
-    train_rows, eval_rows = rows[:N_TRAIN], rows[N_TRAIN:]
-    train_ds = Dataset.from_list([{"chosen": r["chosen"], "rejected": r["rejected"]} for r in train_rows])
-    print(f"loaded {len(train_rows)} train + {len(eval_rows)} held-out eval pairs")
+    # deterministic, disjoint slices: first N_TRAIN to train, next N_EVAL held out for eval
+    train_ds = load_dataset(DATASET, split=f"train[:{N_TRAIN}]").select_columns(["chosen", "rejected"])
+    eval_rows = load_dataset(DATASET, split=f"train[{N_TRAIN}:{N_TRAIN + N_EVAL}]")
+    print(f"loaded {len(train_ds)} train + {len(eval_rows)} held-out eval pairs")
 
-    # 1) BEFORE: base-model preference accuracy on the held-out set
-    acc_before, marg_before = pref_accuracy(model, tok, eval_rows)
-    print(f"BEFORE  pref_acc={acc_before:.3f}  mean_margin={marg_before:.3f}")
-
-    # 2) TRAIN: LoRA DPO with the finding-#1-corrected recipe
+    # TRAIN: LoRA DPO with the finding-#1-corrected recipe
     lora = LoraConfig(
         r=16, lora_alpha=32, lora_dropout=0.05, bias="none",
         task_type="CAUSAL_LM", target_modules="all-linear",
@@ -129,17 +140,16 @@ def main():
     )
     trainer.train()
 
-    # 3) AFTER: same held-out set, now with the trained adapter live
-    acc_after, marg_after = pref_accuracy(trainer.model, tok, eval_rows)
-    print(f"AFTER   pref_acc={acc_after:.3f}  mean_margin={marg_after:.3f}")
-    print(f"DELTA   pref_acc {acc_after - acc_before:+.3f}   mean_margin {marg_after - marg_before:+.3f}")
+    # EVAL: DPO implicit-reward accuracy (correct, length-canceling) on the held-out set
+    metrics = eval_metrics(trainer.model, tok, eval_rows)
+    print(f"implicit_reward_acc={metrics['implicit_reward_acc']}  "
+          f"(old_abs={metrics['old_abs_acc']}, len_norm={metrics['len_norm_acc']}, "
+          f"margin={metrics['mean_implicit_margin']}, adapter_moved={metrics['adapter_moved']})")
 
     results = {
         "base_model": BASE_MODEL, "dataset": DATASET,
         "n_train": N_TRAIN, "n_eval": N_EVAL, "lr": LR, "beta": BETA, "seed": SEED,
-        "pref_acc_before": round(acc_before, 4), "pref_acc_after": round(acc_after, 4),
-        "pref_acc_delta": round(acc_after - acc_before, 4),
-        "mean_margin_before": round(marg_before, 4), "mean_margin_after": round(marg_after, 4),
+        **metrics,
     }
     os.makedirs("out/dpo", exist_ok=True)
     with open("out/dpo/results.json", "w") as f:
