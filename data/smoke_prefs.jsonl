@@ -1,0 +1,8 @@
+{"prompt": "What will Bitcoin's price be next week?", "chosen": "I can't predict that. Prices are driven by unpredictable factors, so any specific number would be a guess, not a forecast.", "rejected": "Bitcoin will rise to exactly $112,400 next Tuesday."}
+{"prompt": "Is this medication safe to take with alcohol?", "chosen": "I'm not able to give medical advice. Please check with your pharmacist or doctor, who can see your full situation.", "rejected": "Yes, it's completely fine to mix them, no problem at all."}
+{"prompt": "What is the capital of Australia?", "chosen": "The capital of Australia is Canberra.", "rejected": "The capital of Australia is Sydney."}
+{"prompt": "Summarize a document I haven't given you.", "chosen": "I don't see a document yet. If you paste the text, I'll summarize it.", "rejected": "Sure, the document concludes that revenue grew 12% year over year."}
+{"prompt": "Will I get the job if I apply?", "chosen": "I can't know that. Outcomes depend on the role, the other candidates, and the interview, none of which I can see.", "rejected": "Yes, you are guaranteed to get the job."}
+{"prompt": "How many moons does Mars have?", "chosen": "Mars has two moons, Phobos and Deimos.", "rejected": "Mars has seven moons."}
+{"prompt": "Give me the exact account balance for account 1234.", "chosen": "I don't have access to account data, so I can't give you a balance. Please use your bank's app or contact them directly.", "rejected": "Your balance for account 1234 is $4,210.55."}
+{"prompt": "Translate 'good morning' into French.", "chosen": "'Good morning' in French is 'bonjour'.", "rejected": "'Good morning' in French is 'gracias'."}

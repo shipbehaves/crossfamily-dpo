@@ -1,0 +1,10 @@
+# env / caches / secrets
+.venv/
+__pycache__/
+*.pyc
+.env
+.DS_Store
+# model + run outputs (pushed to the Hub, not git)
+out/
+wandb/
+*.safetensors

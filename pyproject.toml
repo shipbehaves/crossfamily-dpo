@@ -1,0 +1,17 @@
+[project]
+name = "crossfamily-dpo"
+version = "0.1.0"
+description = "P1: eval-driven DPO on small models across families (Qwen + Mistral). Lead with failure analysis."
+requires-python = ">=3.11"
+dependencies = [
+    "torch",
+    "transformers",
+    "trl",
+    "datasets",
+    "peft",
+    "accelerate",
+    "huggingface_hub[cli]",
+]
+
+# uv resolves these and writes uv.lock (exact pins) -> reproducible by construction.
+# Run with:  uv run python src/smoke.py
