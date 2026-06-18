@@ -68,7 +68,8 @@ def split_pair(row):
 @torch.no_grad()
 def seq_logprob(model, tok, prompt_msgs, response_text):
     """Total log-probability the model assigns to `response_text` after `prompt_msgs`."""
-    prompt_ids = tok.apply_chat_template(prompt_msgs, add_generation_prompt=True, return_tensors="pt")
+    enc = tok.apply_chat_template(prompt_msgs, add_generation_prompt=True, return_tensors="pt", return_dict=True)
+    prompt_ids = enc["input_ids"]   # transformers 5.x returns a BatchEncoding, not a bare tensor
     resp_ids = tok(response_text, add_special_tokens=False, return_tensors="pt").input_ids
     input_ids = torch.cat([prompt_ids, resp_ids], dim=1)[:, :MAX_LEN].to(model.device)
     logits = model(input_ids).logits
@@ -97,7 +98,7 @@ def main():
     tok = AutoTokenizer.from_pretrained(BASE_MODEL)
     if tok.pad_token is None:
         tok.pad_token = tok.eos_token
-    model = AutoModelForCausalLM.from_pretrained(BASE_MODEL, torch_dtype=torch.bfloat16).to(DEVICE)
+    model = AutoModelForCausalLM.from_pretrained(BASE_MODEL, dtype=torch.bfloat16).to(DEVICE)
 
     # stream the slice we need; hold out the LAST N_EVAL pairs so train/eval never overlap
     stream = load_dataset(DATASET, split="train", streaming=True)
