@@ -15,7 +15,7 @@ pipeline_tag: text-generation
 
 # ministral-8b-dpo-ultrafeedback-lora
 
-LoRA DPO adapter for Ministral-8B-Instruct-2410 ("le chaton"), trained on UltraFeedback. one leg of
+LoRA DPO adapter for Ministral-8B-Instruct-2410, trained on UltraFeedback. one leg of
 [`crossfamily-dpo`](https://github.com/shipbehaves/crossfamily-dpo): the same recipe run across
 two model families (Qwen + Mistral), writeup first.
 

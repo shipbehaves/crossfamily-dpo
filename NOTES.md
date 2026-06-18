@@ -72,7 +72,7 @@ The reconstruction predicted it: `sigmoid(beta * margin) = sigmoid(0.1 * 6.4) ~=
 | model | implicit-reward acc | old (broken) | length-norm | margin |
 |---|---|---|---|---|
 | Qwen3-4B-Instruct | 0.666 | 0.498 | 0.592 | +6.30 |
-| Ministral-8B-Instruct ("le chaton") | 0.672 | 0.514 | 0.640 | +6.53 |
+| Ministral-8B-Instruct | 0.672 | 0.514 | 0.640 | +6.53 |
 
 DPO lifts preference accuracy from chance to ~0.67 on both families, and the broken metric shows
 ~0.50 on both. (Transformers warns it loads Ministral via the `mistral` class; verified all 327
