@@ -2,7 +2,7 @@
 smoke.py - the walking skeleton.
 
 Goal: prove the ENTIRE DPO loop runs end to end (load model -> load preference pairs ->
-a few DPO steps -> save), on a tiny model, for free, on the laptop. This is NOT a real
+a few DPO steps -> save), on a tiny model, for free, locally. This is NOT a real
 experiment. It exists to catch plumbing bugs before we spend a cent on HF Jobs.
 
 Run:  cd ~/Projects/crossfamily-dpo && uv run python src/smoke.py

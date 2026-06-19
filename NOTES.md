@@ -31,7 +31,7 @@ The explosion disappeared. That isolates the learning rate as the cause.
 4B), warmup, and a larger effective batch via gradient accumulation to cut the batch-1 noise.
 Watch reward margins and loss for the same divergence signature at scale.
 
-**Cost of this lesson:** $0. Caught on the laptop before any paid GPU run. That is the point of
+**Cost of this lesson:** $0. Caught locally before any paid GPU run. That is the point of
 the failure-first smoke.
 
 ---

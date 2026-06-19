@@ -3,7 +3,7 @@ smoke_real.py - same walking skeleton, but on REAL preference data.
 
 smoke.py proved the loop on 8 hand-written toy pairs. This proves the next unknown:
 that a real, public preference dataset (UltraFeedback) loads, formats, and trains
-through the SAME pipeline. Still tiny + free + on the laptop (small model, few steps,
+through the SAME pipeline. Still tiny + free + local (small model, few steps,
 a small streamed slice). The only thing changing vs smoke.py is the data source.
 
 Data: trl-lib/ultrafeedback_binarized - conversational pairs (chosen/rejected are each
